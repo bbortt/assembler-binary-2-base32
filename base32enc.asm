@@ -34,7 +34,11 @@ readInput:
 	je exitProgramm		; Proceed to exit if ctrl+d pressed
 
 prepareConversion:
-	mov ecx, inputLength
+	xor ecx, ecx		; Reset line string pointer
+	xor eax, eax		; Reset eax
+	mov ecx, inputLength	; Copy the line string pointer
+
+; At this point, eax, ebx and ecx is in use!
 	
 toBase32:
 ; TODO
