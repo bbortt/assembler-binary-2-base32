@@ -1,3 +1,7 @@
 # Compiled files
-inputoutput64
-inputoutput64.o
+base32enc
+base32enc.o
+
+# Test files
+test.txt
+expected.txt
