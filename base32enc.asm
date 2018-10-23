@@ -39,7 +39,7 @@ prepareRegisters:
 	xor ecx, ecx		; clear 32 bit register
 	xor edx, edx		; clear 32 bit register
 	xor sp, sp		; clear 16 bit register
-	xor bp, bp		; clear 16 bit register
+	xor ebp, ebp		; clear 32 bit register
 
 initializeData:
 
@@ -55,7 +55,7 @@ initializeData:
 ; ch - contains bytes-allocated-count
 ; edx - contains results of the module calculation
 ; sp - contains turns-done-count
-; bp - contains interim results
+; ebp - contains interim results
 
 toBase32:
 
@@ -75,14 +75,34 @@ checkIfAllocateNeeded:
 	xor eax, eax		; Clear eax from previous calcualations
 	mov eax, 5		; Prepare 5 bits for every turn we did
 	mul sp
-	mov bp, [eax]		; Save result for modulo
+	mov ebp, eax		; Save result for modulo
 
 	xor eax, eax		; Clear eax from previous calculation
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
 	mul ch			; Multiply with bytes-allocated-count to get amount of bits already processed
 
 	div bp			; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
-	mov cl, [dl]		; Copy leftover-count (modulo-result) to register
+	mov cl, dl		; Copy leftover-count (modulo-result) to register
+
+	cmp cl, 0		; Look if we do not have any leftovers
+	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
+
+	mov bl, [rsi]		; Allocate remaining bits to shift-byte without leftovers
+	jmp toBase32		; Start algorithm from the beginning
+
+checkShouldAllocateFromInput:
+
+	mov bh, [rsi]		; Allocate remaining bits to leftovers
+
+	cmp cl, 5		; Compare leftover-count to 5
+	jge toBase32		; If more or exactly 5 bits left, do not allocate from next byte
+
+allocateFromNextByte:
+
+	mov bh, [rsi]		; Allocate remaining bits to leftovers
+	inc rsi 		; Proceed to next byte from input
+	mov bl, [rsi]		; Move input to shift-bits
+	jmp toBase32		; Start algorithm from the beginning
 
 finalizeBase32String:
 
