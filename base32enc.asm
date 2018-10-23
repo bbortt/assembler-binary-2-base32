@@ -99,9 +99,9 @@ checkShouldAllocateFromInput:
 
 allocateFromNextByte:
 
-	mov bh, [rsi]		; Allocate remaining bits to leftovers
 	inc rsi 		; Proceed to next byte from input
 	mov bl, [rsi]		; Move input to shift-bits
+	add ch, 1		; Increase bytes-allocated-count by 1
 	jmp toBase32		; Start algorithm from the beginning
 
 finalizeBase32String:
