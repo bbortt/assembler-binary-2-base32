@@ -26,7 +26,7 @@ readInput:
 	mov rax, 0		; Code for sys-read call
 	mov rdi, 0		; File-Descriptor 1: Standard input
 	mov rsi, input		; Specify input location
-	mov rdx, inputLength	; Specify input size to read/write
+	mov rdx, inputLength	; Specify input size to read
 	syscall			; Execute read with kernel call
 
 	cmp eax, 0		; Control if input is EOF (0 bytes) flagged
@@ -34,33 +34,24 @@ readInput:
 
 prepareRegisters:
 
-	xor eax, eax		; clear 32 bit register
-	xor ebx, ebx		; clear 32 bit register
-	xor ecx, ecx		; clear 32 bit register
-	xor edx, edx		; clear 32 bit register
-	xor sp, sp		; clear 16 bit register
-	xor ebp, ebp		; clear 32 bit register
+	; At this point, theee following registers are in use:
+	xor eax, eax		;	eax - contains parameters for the modulo calculation
+	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
+	xor ecx, ecx		; ch - contains bytes-allocated-count;	cl - contains leftover-count
+	xor edx, edx		;	edx - contains modulo calculation results
+	xor r8w, r8w		;					r8w - contains turn-done-count
+	xor r9d, r9d		;	r9d - contains interim results
 
 initializeData:
 
-	mov bh, [input]
-	mov cl, 8
-	mov ch, 1
-
-; At this point, eax, ebx and ecx is in use!
-; eax - contains parameters for the modulo calculation
-; bl - contains shift-bits
-; bh - contains leftovers
-; cl - contains leftover-count
-; ch - contains bytes-allocated-count
-; edx - contains results of the module calculation
-; sp - contains turns-done-count
-; ebp - contains interim results
+	mov bh, [input]		; Read first byte as "leftovers" of the (unexisting) previous calculation
+	mov cl, 8		; There were 8 bits left in the (unexisting) previous calculation
+	mov ch, 1		; One-time one byte was allocated (processed)
 
 toBase32:
 
-	inc sp			; Start new turn, increase counter
-	
+	add r8w, 1		; Start new turn, increase counter
+
 	add cl, 3		; Increase leftover-count by 3 bits to get 5
 	shr bx, cl		; Shift bl+bh (=bx) to have 5 bits left
 ; TODO
@@ -74,14 +65,14 @@ checkIfAllocateNeeded:
 
 	xor eax, eax		; Clear eax from previous calcualations
 	mov eax, 5		; Prepare 5 bits for every turn we did
-	mul sp
-	mov ebp, eax		; Save result for modulo
+	mul r8w
+	mov r9d, eax		; Save result for modulo
 
 	xor eax, eax		; Clear eax from previous calculation
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
 	mul ch			; Multiply with bytes-allocated-count to get amount of bits already processed
 
-	div bp			; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
+	div r9w			; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
 	cmp cl, 0		; Look if we do not have any leftovers
