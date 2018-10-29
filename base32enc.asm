@@ -13,6 +13,7 @@ SECTION .data			; Section containing initialised data
 SECTION .bss			; Section containing uninitialized data
 
 	input: resb 16
+	output:	resb 16
 	inputLength: equ 16
 
 SECTION .text			; Section containing code
@@ -20,9 +21,11 @@ SECTION .text			; Section containing code
 global 	_start			; Linker needs this to find the entry point!
 
 _start:
+
 	nop			; Start of program
 
 readInput:
+
 	mov rax, 0		; Code for sys-read call
 	mov rdi, 0		; File-Descriptor 1: Standard input
 	mov rsi, input		; Specify input location
@@ -41,6 +44,7 @@ prepareRegisters:
 	xor edx, edx		; edx - contains modulo calculation results
 	xor r8d, r8d		; r8d - contains bytes-allocated-count
 	xor r9d, r9d		; r9d - contains turns-done-count
+	xor r14d, r14d		; r14d - contains output (tmporary)
 	xor r15d, r15d		; r15d - contains interim results
 
 initializeData:
@@ -56,6 +60,11 @@ toBase32:
 	add ecx, 3		; Increase leftover-count by 3 bits to get 5
 	shr bx, cl		; Shift bh+bl (=bx) to have 5 bits left
 	mov bl, [BASE32_TABLE+ebx] ; Replace encoding table index with effective base32 char
+
+writeToOutput:
+
+	shl r14b, 8	    	; Move last allocated output to not override id
+	mov r14b, bl		; Move calculated value to output
 
 ; TODO
 
