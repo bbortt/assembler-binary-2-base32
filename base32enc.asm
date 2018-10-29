@@ -8,7 +8,7 @@
 
 SECTION .data			; Section containing initialised data
 
-	encodingTable: db "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", 32
+	BASE32_TABLE: db "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
 SECTION .bss			; Section containing uninitialized data
 
@@ -35,47 +35,50 @@ readInput:
 prepareRegisters:
 
 	; At this point, theee following registers are in use:
-	xor eax, eax		;	eax - contains parameters for the modulo calculation
+	xor eax, eax		; eax - contains parameters for the modulo calculation
 	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
-	xor ecx, ecx		; ch - contains bytes-allocated-count;	cl - contains leftover-count
-	xor edx, edx		;	edx - contains modulo calculation results
-	xor r8w, r8w		;					r8w - contains turn-done-count
-	xor r9d, r9d		;	r9d - contains interim results
+	xor ecx, ecx		; ecx - contains leftover-count, ecx required because of calculations
+	xor edx, edx		; edx - contains modulo calculation results
+	xor r8d, r8d		; r8d - contains bytes-allocated-count
+	xor r9d, r9d		; r9d - contains turns-done-count
+	xor r15d, r15d		; r15d - contains interim results
 
 initializeData:
 
 	mov bh, [input]		; Read first byte as "leftovers" of the (unexisting) previous calculation
-	mov cl, 8		; There were 8 bits left in the (unexisting) previous calculation
-	mov ch, 1		; One-time one byte was allocated (processed)
+	mov ecx, 8		; There were 8 bits left in the (unexisting) previous calculation
+	mov r8d, 1		; One-time one byte was allocated (processed)
 
 toBase32:
 
-	add r8w, 1		; Start new turn, increase counter
+	inc r9d			; Start new turn, increase counter
 
-	add cl, 3		; Increase leftover-count by 3 bits to get 5
-	shr bx, cl		; Shift bl+bh (=bx) to have 5 bits left
+	add ecx, 3		; Increase leftover-count by 3 bits to get 5
+	shr bx, cl		; Shift bh+bl (=bx) to have 5 bits left
+	mov bl, [BASE32_TABLE+ebx] ; Replace encoding table index with effective base32 char
+
 ; TODO
 
 proceedToNextChar:
 
-	cmp ch, inputLength	; Compare byte-allocated-count to input length
+	cmp r8w, inputLength	; Compare byte-allocated-count to input length
 	je finalizeBase32String	; Finalize Base32 if EOF reached
 
 checkIfAllocateNeeded:
 
 	xor eax, eax		; Clear eax from previous calcualations
 	mov eax, 5		; Prepare 5 bits for every turn we did
-	mul r8w
-	mov r9d, eax		; Save result for modulo
+	mul r9d			; Multiply by turns-done-count to get amount of processed bits
+	mov r15d, eax		; Save result for modulo
 
 	xor eax, eax		; Clear eax from previous calculation
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
-	mul ch			; Multiply with bytes-allocated-count to get amount of bits already processed
+	mul r8w			; Multiply with bytes-allocated-count to get amount of bits already processed
 
-	div r9w			; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
+	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
-	cmp cl, 0		; Look if we do not have any leftovers
+	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
 
 	mov bl, [rsi]		; Allocate remaining bits to shift-byte without leftovers
@@ -85,14 +88,14 @@ checkShouldAllocateFromInput:
 
 	mov bh, [rsi]		; Allocate remaining bits to leftovers
 
-	cmp cl, 5		; Compare leftover-count to 5
+	cmp ecx, 5		; Compare leftover-count to 5
 	jge toBase32		; If more or exactly 5 bits left, do not allocate from next byte
 
 allocateFromNextByte:
 
 	inc rsi 		; Proceed to next byte from input
 	mov bl, [rsi]		; Move input to shift-bits
-	add ch, 1		; Increase bytes-allocated-count by 1
+	inc r8d			; Increase bytes-allocated-count by 1
 	jmp toBase32		; Start algorithm from the beginning
 
 finalizeBase32String:
