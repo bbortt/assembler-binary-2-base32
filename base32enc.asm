@@ -36,14 +36,17 @@ readInput:
 
 prepareRegisters:
 
-	; At this point, theee following registers are in use:
+	mov r10d, eax		; Move input size to r10d to detect end of encoding
+	
+	; At this point, the following registers are in use:
 	xor eax, eax		; eax - contains parameters for the modulo calculation
 	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
 	xor ecx, ecx		; ecx - contains leftover-count, ecx required because of calculations
 	xor edx, edx		; edx - contains modulo calculation results
 	xor r8d, r8d		; r8d - contains bytes-allocated-count
 	xor r9d, r9d		; r9d - contains turns-done-count
-	xor r14d, r14d		; r14d - contains output (tmporary)
+	;			  r10d - contains input count to detect end of encoding
+	xor r14d, r14d		; r14d - contains output (temporary)
 	xor r15d, r15d		; r15d - contains interim results
 
 initializeData:
@@ -55,6 +58,11 @@ initializeData:
 toBase32:
 
 	inc r9d			; Start new turn, increase counter
+
+checkShouldDoOneMoreTurn:
+
+	cmp r8d, r10d		; Compare byte-allocated-count to input length
+	je finalizeBase32String	; Finalize Base32 if EOF reached
 
 shiftLeftRightRemovePrefixingLeftoverBits:
 
@@ -73,22 +81,19 @@ shiftToFiveBase32Bits:
 
 addToOutput:
 
-	shl r14b, 8	    	; Move last allocated output to not override id
+	shl r14w, 8	    	; Move last allocated output to not override id
 	mov r14b, bl		; Move calculated value to output
 
-proceedToNextChar:
+checkShouldAllocate:
 
-	cmp r8d, inputOutputLength	; Compare byte-allocated-count to input length
-	je finalizeBase32String	; Finalize Base32 if EOF reached
-
-checkIfAllocateNeeded:
-
+T:
 	mov eax, 5		; Prepare 5 bits for every turn we did
 	mul r9d			; Multiply by turns-done-count to get amount of processed bits
 	mov r15d, eax		; Save result for modulo
 
+T1:
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
-	mul r8d			; Multiply with bytes-allocated-count to get amount of bits already processed
+	mul r8d			; Multiply with bytes-allocated-count to get amount of bits already read from input
 
 	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
@@ -107,7 +112,7 @@ checkShouldAllocateFromInput:
 	cmp ecx, 5		; Compare leftover-count to 5
 	jge toBase32		; If more or exactly 5 bits left, do not allocate from next byte
 
-allocateFromNextByte:
+allocateFromInput:
 
 	inc rsi 		; Proceed to next byte from input
 	mov bl, [rsi]		; Move input to shift-bits
