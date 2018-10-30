@@ -59,11 +59,6 @@ toBase32:
 
 	inc r9			; Start new turn, increase counter
 
-checkShouldDoOneMoreTurn:
-
-	cmp r8, r10		; Compare byte-allocated-count to input length
-	jg finalizeBase32String	; Finalize Base32 if EOF reached
-
 shiftLeftRightRemovePrefixingLeftoverBits:
 
 	mov r15d, ecx		; Save leftover-count as interim result
@@ -97,8 +92,8 @@ checkShouldAllocate:
 	div r15d		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
-	cmp cl, 8
-	jg finalizeBase32String
+	cmp cl, 8		; Check if leftovers were not nullified (e.g. end of input)
+	jge finalizeBase32String ; Jump to finalization if end of input reached
 	
 	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
@@ -118,11 +113,11 @@ checkShouldAllocateFromInput:
 
 checkShouldAllocateZeros:
 
-	cmp r8, r10
-	jl allocateFromInput
+	cmp r8, r10		; Compare turn-done-count to input size
+	jl allocateFromInput	; Allocate from remaining input if there is some
 
-	xor bl, bl
-	jmp toBase32
+	xor bl, bl		; Nullify allocated byte if only the leftovers need to be processed
+	jmp toBase32		; Process leftovers, then exit
 
 allocateFromInput:
 
@@ -135,11 +130,12 @@ finalizeBase32String:
 
 	inc r9			; Finalizing is like an invisible step.. do not override last added value!
 	xor edx, edx		; Set edx to 0 because 64-bit div is edx | eax
+	mov r15, 8		; Save 8 (as a divider) in register
 
 suffixUntilMultipleOf8:
 
-	mov eax, 8		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
-	div r9d			; dx will be turn-done-count % 8
+	mov eax, r9d		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
+	div r15d		; dx will be turn-done-count % 8
 
 	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
 	mov [output+r9], byte '='	; Write suffix ('=') to fill up to multiple of 8
