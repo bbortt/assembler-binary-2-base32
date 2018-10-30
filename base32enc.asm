@@ -57,40 +57,47 @@ toBase32:
 
 	inc r9d			; Start new turn, increase counter
 
-	add ecx, 3		; Increase leftover-count by 3 bits to get 5
+shiftLeftRightRemovePrefixingLeftoverBits:
+	mov r15d, ecx		; Save leftover-count as interim result
+	mov ecx, 8		; Allocate 8 to ecx to subtract leftover-count
+	sub ecx, r15d		; Subtract leftover-count from 8 to get to-nullify-bit-count
+	shl bx, cl		; Nullify bits prefixing the leftovers
+	shr bx, cl		; Reset leftovers to original position
+	mov ecx, r15d		; Reallocate leftover-count to intended register
+
+shiftToFiveBase32Bits:
+	add ecx, 3		; Increase leftover-count by 3 bits to get 5 out of 8
 	shr bx, cl		; Shift bh+bl (=bx) to have 5 bits left
 	mov bl, [BASE32_TABLE+ebx] ; Replace encoding table index with effective base32 char
 
-writeToOutput:
+addToOutput:
 
 	shl r14b, 8	    	; Move last allocated output to not override id
 	mov r14b, bl		; Move calculated value to output
 
-; TODO
-
 proceedToNextChar:
 
-	cmp r8w, inputLength	; Compare byte-allocated-count to input length
+	cmp r8d, inputLength	; Compare byte-allocated-count to input length
 	je finalizeBase32String	; Finalize Base32 if EOF reached
 
 checkIfAllocateNeeded:
 
-	xor eax, eax		; Clear eax from previous calcualations
 	mov eax, 5		; Prepare 5 bits for every turn we did
 	mul r9d			; Multiply by turns-done-count to get amount of processed bits
 	mov r15d, eax		; Save result for modulo
 
-	xor eax, eax		; Clear eax from previous calculation
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
-	mul r8w			; Multiply with bytes-allocated-count to get amount of bits already processed
+	mul r8d			; Multiply with bytes-allocated-count to get amount of bits already processed
 
 	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
+T1:
 	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
 
 	mov bl, [rsi]		; Allocate remaining bits to shift-byte without leftovers
+	mov ecx, 8		; 0 remaining equals 8, need to shift ALL on next turn
 	jmp toBase32		; Start algorithm from the beginning
 
 checkShouldAllocateFromInput:
