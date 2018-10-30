@@ -94,14 +94,18 @@ checkShouldAllocate:
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
 	mul r8			; Multiply with bytes-allocated-count to get amount of bits already read from input
 
-T:
 	div r15d		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
+	cmp cl, 8
+	jg finalizeBase32String
+	
 	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
 
-	mov bl, [rsi]		; Allocate remaining bits to shift-byte without leftovers
+	inc rsi 		; Proceed to next byte from input
+	mov bh, [rsi]		; Allocate next byte as leftovers
+	inc r8			; Increase bytes-allocated-count by 1
 	mov ecx, 8		; 0 remaining equals 8, need to shift ALL on next turn
 	jmp toBase32		; Start algorithm from the beginning
 
@@ -112,6 +116,14 @@ checkShouldAllocateFromInput:
 	cmp ecx, 5		; Compare leftover-count to 5
 	jge toBase32		; If more or exactly 5 bits left, do not allocate from next byte
 
+checkShouldAllocateZeros:
+
+	cmp r8, r10
+	jl allocateFromInput
+
+	xor bl, bl
+	jmp toBase32
+
 allocateFromInput:
 
 	inc rsi 		; Proceed to next byte from input
@@ -121,8 +133,12 @@ allocateFromInput:
 
 finalizeBase32String:
 
-	mov eax, 8		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
+	inc r9			; Finalizing is like an invisible step.. do not override last added value!
 	xor edx, edx		; Set edx to 0 because 64-bit div is edx | eax
+
+suffixUntilMultipleOf8:
+
+	mov eax, 8		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
 	div r9d			; dx will be turn-done-count % 8
 
 	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
@@ -131,7 +147,7 @@ finalizeBase32String:
 
 	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
 	je writeEncodedString	; Write output if we reached a multiple of 8
-	jmp finalizeBase32String	; Loop suffixing until we reach multiple of 8
+	jmp suffixUntilMultipleOf8	; Loop suffixing until we reach multiple of 8
 
 writeEncodedString:
 
