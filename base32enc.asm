@@ -12,9 +12,8 @@ SECTION .data			; Section containing initialised data
 
 SECTION .bss			; Section containing uninitialized data
 
-	input: resb 16
-	output:	resb 16
-	inputLength: equ 16
+	inputOutput: resb 16
+	inputOutputLength: equ 16
 
 SECTION .text			; Section containing code
 
@@ -28,8 +27,8 @@ readInput:
 
 	mov rax, 0		; Code for sys-read call
 	mov rdi, 0		; File-Descriptor 1: Standard input
-	mov rsi, input		; Specify input location
-	mov rdx, inputLength	; Specify input size to read
+	mov rsi, inputOutput	; Specify input location
+	mov rdx, inputOutputLength	; Specify input size to read
 	syscall			; Execute read with kernel call
 
 	cmp eax, 0		; Control if input is EOF (0 bytes) flagged
@@ -49,7 +48,7 @@ prepareRegisters:
 
 initializeData:
 
-	mov bh, [input]		; Read first byte as "leftovers" of the (unexisting) previous calculation
+	mov bh, [rsi]		; Read first byte as "leftovers" of the (unexisting) previous calculation
 	mov ecx, 8		; There were 8 bits left in the (unexisting) previous calculation
 	mov r8d, 1		; One-time one byte was allocated (processed)
 
@@ -58,6 +57,7 @@ toBase32:
 	inc r9d			; Start new turn, increase counter
 
 shiftLeftRightRemovePrefixingLeftoverBits:
+
 	mov r15d, ecx		; Save leftover-count as interim result
 	mov ecx, 8		; Allocate 8 to ecx to subtract leftover-count
 	sub ecx, r15d		; Subtract leftover-count from 8 to get to-nullify-bit-count
@@ -66,6 +66,7 @@ shiftLeftRightRemovePrefixingLeftoverBits:
 	mov ecx, r15d		; Reallocate leftover-count to intended register
 
 shiftToFiveBase32Bits:
+
 	add ecx, 3		; Increase leftover-count by 3 bits to get 5 out of 8
 	shr bx, cl		; Shift bh+bl (=bx) to have 5 bits left
 	mov bl, [BASE32_TABLE+ebx] ; Replace encoding table index with effective base32 char
@@ -77,7 +78,7 @@ addToOutput:
 
 proceedToNextChar:
 
-	cmp r8d, inputLength	; Compare byte-allocated-count to input length
+	cmp r8d, inputOutputLength	; Compare byte-allocated-count to input length
 	je finalizeBase32String	; Finalize Base32 if EOF reached
 
 checkIfAllocateNeeded:
@@ -92,7 +93,6 @@ checkIfAllocateNeeded:
 	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
-T1:
 	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
 
@@ -122,7 +122,7 @@ writeEncodedString:
 
 	mov rax, 1		; Code for sys-write call
 	mov rdi, 1		; File-Descriptor 1: Standard outp
-	mov rsi, input		; Specify output location
+	mov rsi, inputOutput	; Specify output location
 	mov rdx, 16		; Specify output size to read/write
 	syscall			; Execute write with kernel kall
 
