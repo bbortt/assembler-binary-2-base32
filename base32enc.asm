@@ -138,12 +138,18 @@ suffixUntilMultipleOf8:
 	div r15d		; dx will be turn-done-count % 8
 
 	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
-	mov [output+r9], byte '='	; Write suffix ('=') to fill up to multiple of 8
+	mov [output+r9], byte '=' ; Write suffix ('=') to fill up to multiple of 8
 	add r9, 2		; Increase turn-done-count by one
 
 	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
-	je writeEncodedString	; Write output if we reached a multiple of 8
-	jmp suffixUntilMultipleOf8	; Loop suffixing until we reach multiple of 8
+	je addLineBreak		; Add final line break if a multiple of 8
+	jmp suffixUntilMultipleOf8 ; Loop suffixing until we reach multiple of 8
+
+addLineBreak:
+
+	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
+	mov [output+r9], byte 10 ; Add line-break ad the end of output
+	inc r9			 ; Reset turn-done-counter to non-array-value
 
 writeEncodedString:
 
