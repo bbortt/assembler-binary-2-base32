@@ -12,8 +12,9 @@ SECTION .data			; Section containing initialised data
 
 SECTION .bss			; Section containing uninitialized data
 
-	input: resb 16
-	inputLength: equ 16
+	input: resb 64
+	inputLength: equ 64
+	output:	resb 512
 
 SECTION .text			; Section containing code
 
@@ -31,21 +32,21 @@ readInput:
 	mov rdx, inputLength	; Specify input size to read
 	syscall			; Execute read with kernel call
 
-	cmp eax, 0		; Control if input is EOF (0 bytes) flagged
+	cmp rax, 0		; Control if input is EOF (0 bytes) flagged
 	je exitProgramm		; Proceed to exit if ctrl+d pressed
 
 prepareRegisters:
 
-	mov r10d, eax		; Move input size to r10d to detect end of encoding
-	
+	mov r10, rax		; Move input size to r10 to detect end of encoding
+
 	; At this point, the following registers are in use:
 	xor eax, eax		; eax - contains parameters for the modulo calculation
 	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
 	xor ecx, ecx		; ecx - contains leftover-count, ecx required because of calculations
 	xor edx, edx		; edx - contains modulo calculation results
-	xor r8d, r8d		; r8d - contains bytes-allocated-count
-	xor r9d, r9d		; r9d - contains turns-done-count
-	;			  r10d - contains input count to detect end of encoding
+	xor r8, r8		; r8 - contains bytes-allocated-count
+	xor r9, r9		; r9 - contains turns-done-count
+	;			  r10 - contains input count to detect end of encoding
 	xor r14d, r14d		; r14d - contains output (temporary)
 	xor r15d, r15d		; r15d - contains interim results
 
@@ -53,16 +54,16 @@ initializeData:
 
 	mov bh, [rsi]		; Read first byte as "leftovers" of the (unexisting) previous calculation
 	mov ecx, 8		; There were 8 bits left in the (unexisting) previous calculation
-	mov r8d, 1		; One-time one byte was allocated (processed)
+	mov r8, 1		; One-time one byte was allocated (processed)
 
 toBase32:
 
-	inc r9d			; Start new turn, increase counter
+	inc r9			; Start new turn, increase counter
 
 checkShouldDoOneMoreTurn:
 
-	cmp r8d, r10d		; Compare byte-allocated-count to input length
-	je finalizeBase32String	; Finalize Base32 if EOF reached
+	cmp r8, r10		; Compare byte-allocated-count to input length
+	jg finalizeBase32String	; Finalize Base32 if EOF reached
 
 shiftLeftRightRemovePrefixingLeftoverBits:
 
@@ -81,19 +82,18 @@ shiftToFiveBase32Bits:
 
 addToOutput:
 
-	shl r14w, 8	    	; Move last allocated output to not override id
-	mov r14b, bl		; Move calculated value to output
+	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
+	mov [output+r9], bl	; Write current encoded char to output
+	inc r9			; Increase ecx back to turn-done-count
 
 checkShouldAllocate:
 
-T:
 	mov eax, 5		; Prepare 5 bits for every turn we did
-	mul r9d			; Multiply by turns-done-count to get amount of processed bits
+	mul r9			; Multiply by turns-done-count to get amount of processed bits
 	mov r15d, eax		; Save result for modulo
 
-T1:
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
-	mul r8d			; Multiply with bytes-allocated-count to get amount of bits already read from input
+	mul r8			; Multiply with bytes-allocated-count to get amount of bits already read from input
 
 	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
@@ -116,7 +116,7 @@ allocateFromInput:
 
 	inc rsi 		; Proceed to next byte from input
 	mov bl, [rsi]		; Move input to shift-bits
-	inc r8d			; Increase bytes-allocated-count by 1
+	inc r8			; Increase bytes-allocated-count by 1
 	jmp toBase32		; Start algorithm from the beginning
 
 finalizeBase32String:
@@ -127,8 +127,8 @@ writeEncodedString:
 
 	mov rax, 1		; Code for sys-write call
 	mov rdi, 1		; File-Descriptor 1: Standard outp
-	mov rsi, input	; Specify output location
-	mov rdx, 16		; Specify output size to read/write
+	mov rsi, output		; Specify output location
+	mov rdx, r9		; Specify output size to read/write
 	syscall			; Execute write with kernel kall
 
 	jmp readInput		; Loop until ctrl+d is pressed
