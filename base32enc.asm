@@ -12,8 +12,8 @@ SECTION .data			; Section containing initialised data
 
 SECTION .bss			; Section containing uninitialized data
 
-	inputOutput: resb 16
-	inputOutputLength: equ 16
+	input: resb 16
+	inputLength: equ 16
 
 SECTION .text			; Section containing code
 
@@ -27,8 +27,8 @@ readInput:
 
 	mov rax, 0		; Code for sys-read call
 	mov rdi, 0		; File-Descriptor 1: Standard input
-	mov rsi, inputOutput	; Specify input location
-	mov rdx, inputOutputLength	; Specify input size to read
+	mov rsi, input	; Specify input location
+	mov rdx, inputLength	; Specify input size to read
 	syscall			; Execute read with kernel call
 
 	cmp eax, 0		; Control if input is EOF (0 bytes) flagged
@@ -127,7 +127,7 @@ writeEncodedString:
 
 	mov rax, 1		; Code for sys-write call
 	mov rdi, 1		; File-Descriptor 1: Standard outp
-	mov rsi, inputOutput	; Specify output location
+	mov rsi, input	; Specify output location
 	mov rdx, 16		; Specify output size to read/write
 	syscall			; Execute write with kernel kall
 
