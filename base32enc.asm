@@ -12,9 +12,9 @@ SECTION .data			; Section containing initialised data
 
 SECTION .bss			; Section containing uninitialized data
 
-	input: resb 64
-	inputLength: equ 64
-	output:	resb 512
+	input: resb 4096
+	inputLength: equ 4096
+	output:	resb 4096
 
 SECTION .text			; Section containing code
 
@@ -56,6 +56,10 @@ initializeData:
 	mov r8, 1		; One-time one byte was allocated (processed)
 
 toBase32:
+checkShouldBedderStop:
+
+	cmp r8, r10		; Compare bytes-allocated-count to input size
+	jg finalizeBase32String	; Finalize string if end of input reached and already nullified
 
 	inc r9			; Start new turn, increase counter
 
