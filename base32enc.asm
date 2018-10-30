@@ -28,7 +28,7 @@ readInput:
 
 	mov rax, 0		; Code for sys-read call
 	mov rdi, 0		; File-Descriptor 1: Standard input
-	mov rsi, input	; Specify input location
+	mov rsi, input		; Specify input location
 	mov rdx, inputLength	; Specify input size to read
 	syscall			; Execute read with kernel call
 
@@ -47,7 +47,6 @@ prepareRegisters:
 	xor r8, r8		; r8 - contains bytes-allocated-count
 	xor r9, r9		; r9 - contains turns-done-count
 	;			  r10 - contains input count to detect end of encoding
-	xor r14d, r14d		; r14d - contains output (temporary)
 	xor r15d, r15d		; r15d - contains interim results
 
 initializeData:
@@ -84,7 +83,7 @@ addToOutput:
 
 	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
 	mov [output+r9], bl	; Write current encoded char to output
-	inc r9			; Increase ecx back to turn-done-count
+	inc r9			; Increase r9 back to turn-done-count
 
 checkShouldAllocate:
 
@@ -95,7 +94,8 @@ checkShouldAllocate:
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
 	mul r8			; Multiply with bytes-allocated-count to get amount of bits already read from input
 
-	div r15w		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
+T:
+	div r15d		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
 	cmp ecx, 0		; Look if we do not have any leftovers
@@ -121,7 +121,17 @@ allocateFromInput:
 
 finalizeBase32String:
 
-; TODO
+	mov eax, 8		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
+	xor edx, edx		; Set edx to 0 because 64-bit div is edx | eax
+	div r9d			; dx will be turn-done-count % 8
+
+	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
+	mov [output+r9], byte '='	; Write suffix ('=') to fill up to multiple of 8
+	add r9, 2		; Increase turn-done-count by one
+
+	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
+	je writeEncodedString	; Write output if we reached a multiple of 8
+	jmp finalizeBase32String	; Loop suffixing until we reach multiple of 8
 
 writeEncodedString:
 
