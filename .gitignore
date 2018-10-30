@@ -3,5 +3,6 @@ base32enc
 base32enc.o
 
 # Test files
-test.txt
-expected.txt
+*.out
+*.want
+*.delta
