@@ -4,10 +4,10 @@ This project was written in the first semester at [BFH TI](https://www.ti.bfh.ch
 
 ## Table of contents
 
-* [Difficulties when encoding to base32](#Difficulties_when_encoding_to_base32)
-* [Road to the perfect algorithm](#Road_to_the_perfect_algorithm)
-* [Explaining the final code](#Explaining_the_final_code)
-* [Copyright, license and usage for BFH TI](#Copyright,_license_and_usage_for_BFH_TI)
+* [Difficulties when encoding to base32](#difficulties-when-encoding-to-base32)
+* [Road to the perfect algorithm](#road-to-the-perfect-algorithm)
+* [Explaining the final code](#explaining-the-final-code)
+* [Copyright, license and usage for BFH TI](#copyright-license-and-usage-for-bfh-ti)
 
 ## Difficulties when encoding to base32
 
