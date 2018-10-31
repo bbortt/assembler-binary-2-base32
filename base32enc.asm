@@ -4,7 +4,6 @@
 ;  Build using these commands:
 ;    nasm -f elf64 -g base32enc.asm
 ;    ld -o base32enc base32enc.o
-;
 
 SECTION .data			; Section containing initialised data
 
@@ -176,5 +175,3 @@ exitProgramm:
 	mov rax, 60		; Code for exit
 	mov rdi, 0		; Return code 0
 	syscall			; Execute exit with kernel call
-
-	nop			; End of program
