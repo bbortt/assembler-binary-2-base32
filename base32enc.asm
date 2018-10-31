@@ -2,7 +2,7 @@
 ;  Description     : Program to encode binary input to base32
 ;
 ;  Build using these commands:
-;    nasm -f elf64 -g base32enc.asm
+;    nasm -f elf64 -g -F dwarf base32dec.asm
 ;    ld -o base32enc base32enc.o
 ;
 ; -----------------------------------------------------------
