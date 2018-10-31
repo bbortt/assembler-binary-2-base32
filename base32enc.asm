@@ -39,12 +39,12 @@ checkShouldExitProgram:
 
 prepareRegisters:
 
-	mov r10d, eax		; Persist input size as rax is used for calculations
+	mov r10d, eax		; Persist input size as eax is used for calculations
 
 	; At this point, the following registers are in use:
 	xor eax, eax		; eax - contains parameters for the modulo calculation
 	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
-	xor ecx, ecx		; ecx - required for calculations	cl contains leftover-count
+	xor cl, cl		; cl - required for calculations	cl contains leftover-count
 	xor edx, edx		; edx - contains modulo calculation results
 	xor r8d, r8d		; r8d - contains turns-done-count
 	xor r9d, r9d		; r9d - contains bytes-allocated-count
@@ -54,22 +54,22 @@ prepareRegisters:
 initializeData:
 
 	mov bh, [rsi]		; Read first byte as "leftovers" of the (unexisting) previous calculation
-	mov ecx, 8		; Initialize 8 leftovers, this will shift the leftovers (bh) into the shift-bits (bl)
+	mov cl, 8		; Initialize 8 leftovers, this will shift the leftovers (bh) into the shift-bits (bl)
 	mov r9d, 1		; Initial byte was allocated (read from input)
 
 toBase32:
 removeAlreadyProcessedShiftBits:
 
-	mov r15d, ecx		; Save leftover-count as interim result because we do a shift-left-right to nullify previously processed bits
-	mov ecx, 8		; Allocate 8 to ecx to subtract leftover-count
-	sub ecx, r15d		; Subtract leftover-count from 8 to get the amount of already processed bits int this leftovers
+	mov r15b, cl		; Save leftover-count as interim result because we do a shift-left-right to nullify previously processed bits
+	mov cl, 8		; Allocate 8 to cl to subtract leftover-count
+	sub cl, r15b		; Subtract leftover-count from 8 to get the amount of already processed bits int this leftovers
 	shl bx, cl		; Nullify already processed leftovers
 	shr bx, cl		; Reset leftovers to original position
-	mov ecx, r15d		; Reallocate leftover-count to intended register
+	mov cl, r15b		; Reallocate leftover-count to intended register
 
 shiftToFiveBase32Bits:
 
-	add ecx, 3		; Increase leftover-count by 3 to get 5 out of 8 bits
+	add cl, 3		; Increase leftover-count by 3 to get 5 out of 8 bits
 	shr bx, cl		; Shift bh+bl (=bx) to have 5 bits left
 	mov bl, [BASE32_TABLE+ebx] ; Replace encoding table index with effective base32 char
 
@@ -102,20 +102,20 @@ checkEndOfInputReached:
 
 checkShouldProcessLeftovers:
 
-	cmp ecx, 0		; Look if any leftovers exist
+	cmp cl, 0		; Look if any leftovers exist
 	jg checkShouldAllocateFromInput	; Check if we need to allocate the next input byte if leftovers exist
 
 	inc rsi 		; Proceed to next byte from input if no leftovers exist
 	mov bh, [rsi]		; Allocate next byte as leftovers
 	inc r9d			; Increase bytes-allocated-count by 1
-	mov ecx, 8		; 0 remaining equals 8, need to shift ALL leftovers to shift-bits on next turn
+	mov cl, 8		; 0 remaining equals 8, need to shift ALL leftovers to shift-bits on next turn
 	jmp toBase32		; Start algorithm from the beginning
 
 checkShouldAllocateFromInput:
 
 	mov bh, [rsi]		; Allocate remaining bits to leftovers
 
-	cmp ecx, 5		; Compare leftover-count to 5
+	cmp cl, 5		; Compare leftover-count to 5
 	jge toBase32		; If more or exactly 5 bits left, do not allocate from next byte
 
 checkShouldAllocateZeros:
