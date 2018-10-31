@@ -59,9 +59,13 @@ toBase32:
 checkShouldBedderStop:
 
 	cmp r8, r10		; Compare bytes-allocated-count to input size
-	jg finalizeBase32String	; Finalize string if end of input reached and already nullified
+	jg T
 
 	inc r9			; Start new turn, increase counter
+	jmp shiftLeftRightRemovePrefixingLeftoverBits
+
+T:	
+	jmp finalizeBase32String	; Finalize string if end of input reached and already nullified
 
 shiftLeftRightRemovePrefixingLeftoverBits:
 
@@ -97,6 +101,7 @@ checkShouldAllocate:
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
 	cmp cl, 8		; Check if leftovers were not nullified (e.g. end of input)
+T1:
 	jge finalizeBase32String ; Jump to finalization if end of input reached
 	
 	cmp ecx, 0		; Look if we do not have any leftovers
@@ -132,28 +137,31 @@ allocateFromInput:
 
 finalizeBase32String:
 
-	inc r9			; Finalizing is like an invisible step.. do not override last added value!
 	xor edx, edx		; Set edx to 0 because 64-bit div is edx | eax
 	mov r15, 8		; Save 8 (as a divider) in register
 
-suffixUntilMultipleOf8:
+checkShouldSuffixEncodedString:
 
 	mov eax, r9d		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
 	div r15d		; dx will be turn-done-count % 8
+	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
+	je addLineBreak		; Add final line break without suffixing if already a multiple of 8
 
-	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
+suffixUntilMultipleOf8:
+
 	mov [output+r9], byte '=' ; Write suffix ('=') to fill up to multiple of 8
-	add r9, 2		; Increase turn-done-count by one
 
+	mov eax, r9d		; Allocate turn-done-count (equal to bytes processed) to eax for modulo calculation
+	div r15d		; dx will be turn-done-count % 8
 	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
 	je addLineBreak		; Add final line break if a multiple of 8
+
+	inc r9			; Increase turn-done-count by one
 	jmp suffixUntilMultipleOf8 ; Loop suffixing until we reach multiple of 8
 
 addLineBreak:
 
-	dec r9			; Remove one from turn-done-count to get array index (starting at 0)
 	mov [output+r9], byte 10 ; Add line-break ad the end of output
-	inc r9			 ; Reset turn-done-counter to non-array-value
 
 writeEncodedString:
 
