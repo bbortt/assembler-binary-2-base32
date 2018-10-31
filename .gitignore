@@ -1,3 +1,6 @@
+# Editor configurations
+.idea/
+
 # Compiled files
 base32enc
 base32enc.o
