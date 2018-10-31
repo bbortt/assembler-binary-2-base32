@@ -11,7 +11,10 @@ This project was written in the first semester at [BFH TI](https://www.ti.bfh.ch
 
 ## Difficulties when encoding to base32
 
+The original difficulty is to transform an input of 8 bit blocks into blocks of 5 bits prefixed with 3 zeros. Because this requires us to keep a transactional byte as well as making the next byte transactional.
 
+The problem is visualized in this short note with two bytes of numeric bits:
+![Problem of packing 8 bits into blocks of 5](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/original_problem_on_block_size.jpg)
 
 ## Road to the perfect algorithm
 
