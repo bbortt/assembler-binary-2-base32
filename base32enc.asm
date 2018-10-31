@@ -34,20 +34,20 @@ readInput:
 
 checkShouldExitProgram:
 
-	cmp rax, 0		; Compare input size to 0 (equals ctrl+d)
+	cmp eax, 0		; Compare input size to 0 (equals ctrl+d)
 	je exitProgramm		; Proceed to exit if command received
 
 prepareRegisters:
 
-	mov r10, rax		; Persist input size as rax is used for calculations
+	mov r10d, eax		; Persist input size as rax is used for calculations
 
 	; At this point, the following registers are in use:
 	xor eax, eax		; eax - contains parameters for the modulo calculation
 	xor ebx, ebx		; bh - contains leftovers;		bl contains shift-bits
 	xor ecx, ecx		; ecx - required for calculations	cl contains leftover-count
 	xor edx, edx		; edx - contains modulo calculation results
-	xor r8, r8		; r8 - contains bytes-allocated-count
-	xor r9, r9		; r9 - contains turns-done-count
+	xor r8d, r8d		; r8d - contains turns-done-count
+	xor r9d, r9d		; r9d - contains bytes-allocated-count
 	;			  r10 - contains effective input size to detect end of encoding
 	xor r15d, r15d		; r15d - contains interim results
 
@@ -55,7 +55,7 @@ initializeData:
 
 	mov bh, [rsi]		; Read first byte as "leftovers" of the (unexisting) previous calculation
 	mov ecx, 8		; Initialize 8 leftovers, this will shift the leftovers (bh) into the shift-bits (bl)
-	mov r8, 1		; Initial byte was allocated (read from input)
+	mov r9d, 1		; Initial byte was allocated (read from input)
 
 toBase32:
 removeAlreadyProcessedShiftBits:
@@ -75,17 +75,17 @@ shiftToFiveBase32Bits:
 
 addToOutput:
 
-	mov [output+r9], bl	; Write current encoded char to output
-	inc r9			; Increase turns-done-count, one more output processed
+	mov [output+r8d], bl	; Write current encoded char to output
+	inc r8d			; Increase turns-done-count, one more output processed
 
 checkShouldAllocate:
 
 	mov eax, 5		; Prepare 5 bits for every turn we did
-	mul r9			; Multiply by turns-done-count to get amount of processed bits
+	mul r8d			; Multiply by turns-done-count to get amount of processed bits
 	mov r15d, eax		; Save interim result for modulo calculation
 
 	mov eax, 8 		; Prepare 8 bits for every allocated byte
-	mul r8			; Multiply with bytes-allocated-count to get amount of bits already read from input
+	mul r9d			; Multiply with bytes-allocated-count to get amount of bits already read from input
 
 	div r15d		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count, equals leftovers to process
 	mov cl, dl		; Copy leftover-count (modulo-result) to intended register
@@ -97,7 +97,7 @@ checkEndOfInputReached:
 
 	cmp cl, 0		; Check if there are any leftovers
 	jne checkShouldProcessLeftovers ; Continue encoding input if any leftovers exist
-	cmp r8, r10		; Check if end of input without was reached without any leftovers
+	cmp r9d, r10d		; Check if end of input without was reached without any leftovers
 	je finalizeBase32String	; Jumpt to suffixing if all input processed without leftovers
 
 checkShouldProcessLeftovers:
@@ -107,7 +107,7 @@ checkShouldProcessLeftovers:
 
 	inc rsi 		; Proceed to next byte from input if no leftovers exist
 	mov bh, [rsi]		; Allocate next byte as leftovers
-	inc r8			; Increase bytes-allocated-count by 1
+	inc r9d			; Increase bytes-allocated-count by 1
 	mov ecx, 8		; 0 remaining equals 8, need to shift ALL leftovers to shift-bits on next turn
 	jmp toBase32		; Start algorithm from the beginning
 
@@ -120,7 +120,7 @@ checkShouldAllocateFromInput:
 
 checkShouldAllocateZeros:
 
-	cmp r8, r10		; Compare bytes-allocated-count to input size
+	cmp r9d, r10d		; Compare bytes-allocated-count to input size
 	jl allocateFromInput	; Allocate from remaining input if there is some
 
 	xor bl, bl		; Nullify allocated byte if only the leftovers need to be processed
@@ -130,43 +130,43 @@ allocateFromInput:
 
 	inc rsi 		; Proceed to next byte from input
 	mov bl, [rsi]		; Move input to shift-bits as we need some of them concatenated with the leftovers
-	inc r8			; Increase bytes-allocated-count by 1
+	inc r9d			; Increase bytes-allocated-count by 1
 	jmp toBase32		; Start algorithm from the beginning
 
 finalizeBase32String:
 
 	xor edx, edx		; Set edx to 0 because 64-bit div is edx | eax
-	mov r15, 8		; Save 8 (as a divider) in register
+	mov r15d, 8		; Save 8 (as a divider) in register
 
 checkShouldSuffixEncodedString:
 
-	mov eax, r9d		; Allocate turns-done-count (equal to bytes processed) to eax for modulo calculation
+	mov eax, r8d		; Allocate turns-done-count (equal to bytes processed) to eax for modulo calculation
 	div r15d		; dx will be turns-done-count % 8
 	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
 	je addLineBreak		; Add final line break without suffixing if already a multiple of 8
 
 suffixUntilMultipleOf8:
 
-	mov [output+r9], byte '=' ; Write suffix ('=') to fill up to multiple of 8
+	mov [output+r8d], byte '=' ; Write suffix ('=') to fill up to multiple of 8
 
-	mov eax, r9d		; Allocate turns-done-count (equal to bytes processed) to eax for modulo calculation
+	mov eax, r8d		; Allocate turns-done-count (equal to bytes processed) to eax for modulo calculation
 	div r15d		; dx will be turns-done-count % 8
 	cmp edx, 0		; Compare modulo result to 0 to detect multiple of 0
 	je addLineBreak		; Add final line break if a multiple of 8
 
-	inc r9			; Increase turns-done-count by one
+	inc r8d			; Increase turns-done-count by one
 	jmp suffixUntilMultipleOf8 ; Loop suffixing until we reach multiple of 8
 
 addLineBreak:
 
-	mov [output+r9], byte 10 ; Add line-break to the end of output
+	mov [output+r8d], byte 10 ; Add line-break to the end of output
 
 writeEncodedString:
 
 	mov rax, 1		; Code for sys-write call
 	mov rdi, 1		; File-Descriptor 1: Standard outp
 	mov rsi, output		; Specify output location
-	mov rdx, r9		; Specify output size to read/write
+	mov rdx, r8		; Specify output size to read/write
 	syscall			; Execute write with kernel kall
 
 	jmp readInput		; Loop until ctrl+d is pressed
