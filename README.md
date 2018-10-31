@@ -15,6 +15,7 @@ This project was written in the first semester at [BFH TI](https://www.ti.bfh.ch
 The original difficulty is to transform an input of 8 bit blocks into blocks of 5 bits prefixed with 3 zeros. Because this requires us to keep a transactional byte as well as making the next byte transactional.
 
 The problem is visualized in this short note with two bytes of numeric bits:
+
 ![Problem of packing 8 bits into blocks of 5](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/original_problem_on_block_size.jpg)
 
 ## Road to the perfect algorithm
@@ -22,6 +23,7 @@ The problem is visualized in this short note with two bytes of numeric bits:
 ### First ideas
 
 I started very simple: By visualizing my mind onto a paper. This is what my first solution looked like:
+
 ![First algorithm page 1](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_1.jpg)
 ![First algorithm page 2](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_2.jpg)
 
@@ -78,6 +80,12 @@ This process is (simplified) repeated until all bytes were converted to 5 bit bl
 ### Suffixing with =
 
 The ending is really easy. Just add as much '='s to your output until the byte-count reaches a multiple of 8. Attention: You do not add any '='s if your output already is on a multiple of 8! (Took me quite a time to detect and fix this error..)
+
+### More readable notes
+
+Based on all this I wrote another pseudo code onto a paper. This time a bit more readable (at least I tried):
+
+![More readable algorithm](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/more_readable_algorithm.jpg)
 
 ## Explaining the final code
 
