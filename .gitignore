@@ -2,6 +2,10 @@
 base32enc
 base32enc.o
 
+# Test compiled files
+b32e*
+b32d*
+
 # Test files
 *.out
 *.want

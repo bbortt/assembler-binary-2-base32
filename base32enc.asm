@@ -56,16 +56,8 @@ initializeData:
 	mov r8, 1		; One-time one byte was allocated (processed)
 
 toBase32:
-checkShouldBedderStop:
-
-	cmp r8, r10		; Compare bytes-allocated-count to input size
-	jg T
 
 	inc r9			; Start new turn, increase counter
-	jmp shiftLeftRightRemovePrefixingLeftoverBits
-
-T:	
-	jmp finalizeBase32String	; Finalize string if end of input reached and already nullified
 
 shiftLeftRightRemovePrefixingLeftoverBits:
 
@@ -100,10 +92,18 @@ checkShouldAllocate:
 	div r15d		; dx will be 8 * bytes-allocated-count % 5 * turns-done-count
 	mov cl, dl		; Copy leftover-count (modulo-result) to register
 
+checkEndOfInputReached:
+
 	cmp cl, 8		; Check if leftovers were not nullified (e.g. end of input)
-T1:
 	jge finalizeBase32String ; Jump to finalization if end of input reached
-	
+
+	cmp cl, 0		; Check if there are no leftovers
+	jne checkShouldProcessLeftovers ; Continue encoding input
+	cmp r8, r10		; Check if we reached end of input without leftovers
+	je finalizeBase32String	; Jumpt to suffixing if all input processed without leftovers
+
+checkShouldProcessLeftovers:
+
 	cmp ecx, 0		; Look if we do not have any leftovers
 	jg checkShouldAllocateFromInput	; Allocate from next byte if any leftovers exist
 
