@@ -21,7 +21,7 @@ The problem is visualized in this short note with two bytes of numeric bits:
 
 ### First ideas
 
-I started very simple: By visualizing my mind onto a paper. This is what my first idea of an algorithm looked like:
+I started very simple: By visualizing my mind onto a paper. This is what my first solution looked like:
 ![First algorithm page 1](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_1.jpg)
 ![First algorithm page 2](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_2.jpg)
 
@@ -35,8 +35,7 @@ This is how I thought it may work:
 // Shift until the first 5 bits left
 0001 234
 ```
-
-But to calculate the next 5 bits I realized that i need the second byte too. I ended up like this:
+But to calculate the next 5 bits I realized that i needed the second byte too. I ended up like this:
 ```
 // Read first byte and some zeros
 1234 5678 | 0000 0000
@@ -48,13 +47,12 @@ But to calculate the next 5 bits I realized that i need the second byte too. I e
 1234 5678 | 0000 0000
 // And read the second byte
 1234 5678 | 1234 5678
-
-// TODO: How to get 5 next bits?
 ```
+Now how do you read the next 5 bits?
 
 ### The shift-left-right
 
-In order to get the 5 next bits without the previously processed we need to do a "shift-left-right":
+I used a trick which I like to call the "shift-left-right":
 ```
 // Shift left to remove previously processed bits
 6781 2345 | 6780 0000
@@ -62,10 +60,24 @@ In order to get the 5 next bits without the previously processed we need to do a
 // Shift right until next 5 bits left
 0000 0000 | 0006 7810
 ```
+Based on this I noticed the need to know how meany bits were left from the previous byte. I thought of a modulo calculation but had no idea on which values it should be based on. After a quick brainstorming the following seemed to be obvious:
+```
+// Calculate transactional bits
+a = input-bytes-read (2) * 8 = 16
 
-Based on this I noticed the need of knowing how meany bits were left from the previous byte. I thought of a modulo calculation but had no idea on which values it should be based on.
+// Calculate processed bits
+b = turns-done (2) * 5 = 10
 
-`// TODO`
+// Calculate how meany bits of the current input-byte are still processable
+a (16) % b (10) = 6
+```
+If the result is exactly or greater than 5 we can still read a Base32 encoded value from the current input-byte. Otherwise we need to read another byte from input into our transactional state.
+
+This process is (simplified) repeated until all bytes were converted to 5 bit blocks.
+
+### Suffixing with =
+
+The ending is really easy. Just add as much '='s to your output until the byte-count reaches a multiple of 8. Attention: You do not add any '='s if your output already is on a multiple of 8! (Took me quite a time to detect and fix this error..)
 
 ## Explaining the final code
 
