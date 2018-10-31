@@ -19,11 +19,15 @@ The problem is visualized in this short note with two bytes of numeric bits:
 
 ## Road to the perfect algorithm
 
+### First ideas
+
 I started very simple: By visualizing my mind onto a paper. This is what my first idea of an algorithm looked like:
 ![First algorithm page 1](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_1.jpg)
 ![First algorithm page 2](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/idea_on_algorithm_page_2.jpg)
 
-I started by converting the first byte into a 5 bit block like this.
+### Calculating the first 5 bits
+
+This is how I thought it may work:
 ```
 // Read first byte
 1234 5678
@@ -37,7 +41,7 @@ But to calculate the next 5 bits I realized that i need the second byte too. I e
 // Read first byte and some zeros
 1234 5678 | 0000 0000
 
-// Shift until the first 5 bits left
+// Shift right until the first 5 bits left
 0000 0000 | 0001 2345
 
 // Now reset it to the inital state
@@ -48,14 +52,20 @@ But to calculate the next 5 bits I realized that i need the second byte too. I e
 // TODO: How to get 5 next bits?
 ```
 
+### The shift-left-right
+
 In order to get the 5 next bits without the previously processed we need to do a "shift-left-right":
 ```
 // Shift left to remove previously processed bits
 6781 2345 | 6780 0000
 
-// Shift left until next 5 bits left
+// Shift right until next 5 bits left
 0000 0000 | 0006 7810
 ```
+
+Based on this I noticed the need of knowing how meany bits were left from the previous byte. I thought of a modulo calculation but had no idea on which values it should be based on.
+
+`// TODO`
 
 ## Explaining the final code
 
