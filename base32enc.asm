@@ -82,7 +82,7 @@ initializeData:
 toBase32:
 removeAlreadyProcessedShiftBits:
 
-	mov r15b, cl		; Save leftover-count as interim result because we do a shift-left-right to nullify previously processed bits
+	mov r15b, cl		; Save leftover-count as interim result because of the "shift-left-right" to nullify previously processed bits
 	mov cl, 8		; Allocate 8 to cl to subtract leftover-count
 	sub cl, r15b		; Subtract leftover-count from 8 to get the amount of already processed bits int this leftovers
 	shl bx, cl		; Nullify already processed leftovers
@@ -102,7 +102,7 @@ addToOutput:
 
 checkShouldAllocate:
 
-	mov eax, 5		; Prepare 5 bits for every turn we did
+	mov eax, 5		; Prepare 5 bits for every turn done
 	mul r8d			; Multiply by turns-done-count to get amount of processed bits
 	mov r15d, eax		; Save interim result for modulo calculation
 
@@ -125,7 +125,7 @@ checkEndOfInputReached:
 checkShouldProcessLeftovers:
 
 	cmp cl, 0		; Look if any leftovers exist
-	jg checkShouldAllocateFromInput	; Check if we need to allocate the next input byte if leftovers exist
+	jg checkShouldAllocateFromInput	; Check if allocate (read byte from input) needed
 
 	inc rsi 		; Proceed to next byte from input if no leftovers exist
 	mov bh, [rsi]		; Allocate next byte as leftovers
@@ -151,7 +151,7 @@ checkShouldAllocateZeros:
 allocateFromInput:
 
 	inc rsi 		; Proceed to next byte from input
-	mov bl, [rsi]		; Move input to shift-bits as we need some of them concatenated with the leftovers
+	mov bl, [rsi]		; Move input to shift-bits, will be concatenated with leftovers
 	inc r9d			; Increase bytes-allocated-count by 1
 	jmp toBase32		; Start algorithm from the beginning
 
@@ -177,7 +177,7 @@ suffixUntilMultipleOf8:
 	je addLineBreak		; Add final line break if a multiple of 8
 
 	inc r8d			; Increase turns-done-count by one
-	jmp suffixUntilMultipleOf8 ; Loop suffixing until we reach multiple of 8
+	jmp suffixUntilMultipleOf8 ; Loop suffixing until multiple of 8
 
 addLineBreak:
 
