@@ -87,6 +87,10 @@ Based on all this I wrote another pseudo code onto a paper. This time a bit more
 
 ![More readable algorithm](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/more_readable_algorithm.jpg)
 
+### Sidenote
+
+Of course this is not THE solution. It just IS a solution.
+
 ## Explaining the final code
 
 `// TODO`
