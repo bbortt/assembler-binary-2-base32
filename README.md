@@ -35,7 +35,7 @@ This is how I thought it may work:
 1234 5678
 
 // Shift until the first 5 bits left
-0001 234
+0001 2345
 ```
 But to calculate the next 5 bits I realized that i needed the second byte too. I ended up like this:
 ```
