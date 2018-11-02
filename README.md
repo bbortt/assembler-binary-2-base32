@@ -73,7 +73,7 @@ b = turns-done (2) * 5 = 10
 // Calculate how meany bits of the current input-byte are still processable
 a (16) % b (10) = 6
 ```
-If the result is exactly or greater than 5 we can still read a Base32 encoded value from the current input-byte. Otherwise we need to read another byte from input into our transactional state.
+If the result is exactly or greater than 5, there exists another Base32 encoded value in the current input-byte. Otherwise there are not enough transactional bits left and you must read another byte from the input.
 
 This process is (simplified) repeated until all bytes were converted to 5 bit blocks.
 
