@@ -1,15 +1,10 @@
 #!/bin/sh
 # This is an example shell script showing how your code will
-# be graded. It compiles _both_ Assembly programs, but only
-# tests ONE of them.  The real grading script will test BOTH.
-# You should extend this script to test the decoder as well.
-# (Testing is part of the job of writing code.)
+# be graded. It compiles and test only the decoder program.
+# The real grading script will test BOTH.
 # Note that if you pass this script, you will receive at
 # least 50% of the points for the Assembler homework!
 
-# Assemble and link encoder
-nasm -f elf64 -g -F dwarf base32enc.asm -o b32e.o || { echo "Assembly code base32enc.asm failed to compile"; exit 1; }
-ld -o b32e b32e.o || { echo "Object failed to link"; exit 1; }
 # Assemble and link decoder
 nasm -f elf64 -g -F dwarf base32dec.asm -o b32d.o || { echo "Assembly code base32dec.asm failed to compile"; exit 1; }
 ld -o b32d b32d.o || { echo "Object failed to link"; exit 1; }
