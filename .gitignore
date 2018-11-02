@@ -4,6 +4,8 @@
 # Compiled files
 base32enc
 base32enc.o
+base32dec
+base32dec.o
 
 # Test compiled files
 b32e*
