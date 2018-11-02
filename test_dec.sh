@@ -11,12 +11,12 @@ ld -o b32d b32d.o || { echo "Object failed to link"; exit 1; }
 
 # run tests
 total=0
-for n in A AA AB bc D13 FOO foxy lalalalalal4242
+for n in IFAQ==== IFBA==== IE====== MJRQ==== IQYTG=== IZHU6=== MZXXQ6I= NRQWYYLMMFWGC3DBNQ2DENBS
 do
   points=1
-  timeout -s SIGKILL 1s echo -n $n | ./b32e > $n.out || { echo "Your 'b32' command failed to run: $?" ; points=0 ; }
-  echo -n $n | base32 > $n.want || { echo "System 'base32' failed to run"; exit 1; }
-  diff -w $n.want $n.out > $n.delta || { echo "Encode failed on $n" ; points=0; }
+  timeout -s SIGKILL 1s echo -n $n | ./b32d > $n.out || { echo "Your 'b32' command failed to run: $?" ; points=0 ; }
+  echo -n $n | base32 -d > $n.want || { echo "System 'base32 -d' failed to run"; exit 1; }
+  diff -w $n.want $n.out > $n.delta || { echo "Decode failed on $n" ; points=0; }
   if test $points = 1
   then
     echo "Test $n passed"
