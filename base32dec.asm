@@ -51,7 +51,7 @@ readInput:
     mov rax, 0          ; Code for sys-read call
     mov rdi, 0          ; File-Descriptor 1: Standard input
     mov rsi, input      ; Specify input location
-    mov rdx, inputLengthn; Specify input size to read
+    mov rdx, inputLength ; Specify input size to read
     syscall             ; Execute read with kernel call
 
 checkShouldExitProgram:
