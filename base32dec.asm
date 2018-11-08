@@ -62,23 +62,37 @@ checkShouldExitProgram:
 prepareRegisters:
 
     mov r10d, eax       ; Persist input size as eax is used for calculations
-
     ; At this point, the following registers are in use:
-    xor eax, eax        ; eax - contains parameters for the modulo calculation
-    xor ebx, ebx        ; bh - contains and-byte;          bl contains next-byte
-    xor cl, cl          ; cl - required for calculations    cl contains leftover-count
-    xor edx, edx        ; edx - contains modulo calculation results
-    xor r8d, r8d        ; r8d - contains turns-done-count
-    xor r9d, r9d        ; r9d - contains bytes-allocated-count
-    ;                     r10 - contains effective input size to detect end of encoding
-    xor r15d, r15d      ; r15d - contains interim results
+    xor ebx, ebx        ;                                   bl contains next-byte
+    xor r8d, r8d        ; r8d - contains output-bits-count
+    ;                     r10 - contains byte-to-process-count to detect end of encoding
 
 initializeData:
 
 
+
 toBinary:
 
-;; TODO
+    mov bl, [rsi+r10d]  ; Read last input unprocessed byte as next-byte
+
+checkEqualsSuffix:
+
+    cmp bl, byte '='    ; Compare current next-byte to the '='-suffix
+    je checkIfInputLeftToProcess ; Ignore suffix if character equal to '='
+
+addToOutput:
+
+    add r8d, 5          ; 5 more bits written to output-buffer
+
+checkIfInputLeftToProcess:
+
+    cmp r10d, 0         ; Check if there is an unprocessed input-byte left
+    je addLineBreak     ; Finalize output if nothing left to process
+
+readNextInputByte:
+
+    dec r10d            ; Decrease byte-to-process-count, read next byte from input
+    jmp toBinary        ; Start decoding with next character
 
 addLineBreak:
 
