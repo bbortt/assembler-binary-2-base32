@@ -62,9 +62,12 @@ checkShouldExitProgram:
 prepareRegisters:
 
     mov r10d, eax       ; Persist input size as eax is used for calculations
+
     ; At this point, the following registers are in use:
+    xor eax, eax        ; eax - contains parameters for the final division calculations
     xor ebx, ebx        ; bh - contains list-loop-index     bl contains next-byte
-    xor r8d, r8d        ; r8d - contains output-bits-count
+    xor r8w, r8w        ; r8w - contains output-bits-count
+    xor r9w, r9w        ; r9w - contains divider
     ;                     r10 - contains byte-to-process-count to detect end of encoding
 
 initializeData:
@@ -97,7 +100,7 @@ addToOutput:
     shr output, 5       ; Prepare output for next 5 bits, nullify
     and output, bh      ;  Match current list-loop-index to output
 
-    inc r8d, 5          ; 5 more bits written to output-buffer
+    inc r8w, 5          ; 5 more bits written to output-buffer
 
 checkIfInputLeftToProcess:
 
@@ -111,7 +114,13 @@ readNextInputByte:
 
 addLineBreak:
 
-    mov [output+r8d], byte 10 ; Add line-break to the end of output
+    mov ax, r8w         ; Move output-bits-count (amount of processed bits) to eax
+    div r9b, 8          ; Prepare 8-bit divisor
+    div r9b             ; Divide output-size by 8 to get amount of bytes.
+    ; ah - contains reminder, al - contains quotien
+
+    inc al              ; Increase al by one, this is the line-break location
+    mov [output+al], byte 10 ; Add line-break to the end of output
 
 writeEncodedString:
 
