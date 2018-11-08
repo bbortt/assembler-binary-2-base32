@@ -63,13 +63,11 @@ prepareRegisters:
 
     mov r10d, eax       ; Persist input size as eax is used for calculations
     ; At this point, the following registers are in use:
-    xor ebx, ebx        ;                                   bl contains next-byte
+    xor ebx, ebx        ; bh - contains list-loop-index     bl contains next-byte
     xor r8d, r8d        ; r8d - contains output-bits-count
     ;                     r10 - contains byte-to-process-count to detect end of encoding
 
 initializeData:
-
-
 
 toBinary:
 
@@ -80,9 +78,26 @@ checkEqualsSuffix:
     cmp bl, byte '='    ; Compare current next-byte to the '='-suffix
     je checkIfInputLeftToProcess ; Ignore suffix if character equal to '='
 
+loopThroughListUntilIndex:
+
+    xor bh, bh          ; Reset list-loop-index from previous lookup
+
+checkIsCurrentIndex:
+
+    cmp bl, [BASE32_TABLE+bh] ; Compare current char to list index
+    je addToOutput:     ; Write current list-loop-index to output if this is the current character
+
+    inc bh              ; Proceed to next character if the current didnt match
+    jmp checkIsCurrentIndex ; Jump to the start of the loop
+
 addToOutput:
 
-    add r8d, 5          ; 5 more bits written to output-buffer
+    shl bh, 3           ; Shift 5 lost-loop-index bits to the left
+
+    shr output, 5       ; Prepare output for next 5 bits, nullify
+    and output, bh      ;  Match current list-loop-index to output
+
+    inc r8d, 5          ; 5 more bits written to output-buffer
 
 checkIfInputLeftToProcess:
 
