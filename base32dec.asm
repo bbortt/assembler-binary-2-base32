@@ -65,16 +65,17 @@ prepareRegisters:
 
     ; At this point, the following registers are in use:
     xor eax, eax        ; eax - contains parameters for the final division calculations
-    xor ebx, ebx        ; bh - contains list-loop-index     bl contains next-byte
-    xor r8w, r8w        ; r8w - contains output-bits-count
-    xor r9w, r9w        ; r9w - contains divider
+    xor ebx, ebx        ;                                   bl contains next-byte
+    xor ecx, ecx        ; ecx required for calculations     cl contains list-loop-index
+    xor r8d, r8d        ; r8d - contains output-bits-count
     ;                     r10 - contains byte-to-process-count to detect end of encoding
+    xor r15d, r15d      ; r15d - contains interim results
 
 initializeData:
 
 toBinary:
 
-    mov bl, [rsi+r10d]  ; Read last input unprocessed byte as next-byte
+    mov bl, [input+r10d]  ; Read last input unprocessed byte as next-byte
 
 checkEqualsSuffix:
 
@@ -83,24 +84,24 @@ checkEqualsSuffix:
 
 loopThroughListUntilIndex:
 
-    xor bh, bh          ; Reset list-loop-index from previous lookup
+    xor ecx, ecx        ; Reset list-loop-index from previous lookup
 
 checkIsCurrentIndex:
 
-    cmp bl, [BASE32_TABLE+bh] ; Compare current char to list index
-    je addToOutput:     ; Write current list-loop-index to output if this is the current character
+    xor r15d, r15d      ; Clear previous interim results
+    mov r15d, ecx       ; Save list-loop-index to 32-bit register
+    cmp bl, [BASE32_TABLE+r15d] ; Compare current char to list index
+    je addToOutput      ; Write current list-loop-index to output if this is the current character
 
-    inc bh              ; Proceed to next character if the current didnt match
+    inc ecx             ; Proceed to next character if the current didnt match
     jmp checkIsCurrentIndex ; Jump to the start of the loop
 
 addToOutput:
 
-    shl bh, 3           ; Shift 5 lost-loop-index bits to the left
-
     shr output, 5       ; Prepare output for next 5 bits, nullify
-    and output, bh      ;  Match current list-loop-index to output
+    and output, cl      ;  Match current list-loop-index to output
 
-    inc r8w, 5          ; 5 more bits written to output-buffer
+    add r8w, 5          ; 5 more bits written to output-buffer
 
 checkIfInputLeftToProcess:
 
@@ -114,13 +115,13 @@ readNextInputByte:
 
 addLineBreak:
 
-    mov ax, r8w         ; Move output-bits-count (amount of processed bits) to eax
-    div r9b, 8          ; Prepare 8-bit divisor
-    div r9b             ; Divide output-size by 8 to get amount of bytes.
+    mov eax, r8d         ; Move output-bits-count (amount of processed bits) to eax
+    mov r15b, 8         ; Prepare 8-bit divisor
+    div r15b            ; Divide output-size by 8 to get amount of bytes.
     ; ah - contains reminder, al - contains quotien
 
     inc al              ; Increase al by one, this is the line-break location
-    mov [output+al], byte 10 ; Add line-break to the end of output
+    mov [output+eax], byte 10 ; Add line-break to the end of output
 
 writeEncodedString:
 
