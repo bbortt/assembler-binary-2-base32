@@ -98,8 +98,8 @@ checkIsCurrentIndex:
 
 addToOutput:
 
-    shr output, 5       ; Prepare output for next 5 bits, nullify
-    and output, cl      ;  Match current list-loop-index to output
+    shr [output], 5       ; Prepare output for next 5 bits, nullify
+    and [output], cl      ;  Match current list-loop-index to output
 
     add r8w, 5          ; 5 more bits written to output-buffer
 

@@ -66,7 +66,7 @@ prepareRegisters:
     ; At this point, the following registers are in use:
     xor eax, eax        ; eax - contains parameters for the modulo calculation
     xor ebx, ebx        ; bh - contains leftovers;          bl contains shift-bits
-    xor cl, cl          ; cl - required for calculations    cl contains leftover-count
+    xor ecx, ecx        ; ecx - required for calculations   cl contains leftover-count
     xor edx, edx        ; edx - contains modulo calculation results
     xor r8d, r8d        ; r8d - contains turns-done-count
     xor r9d, r9d        ; r9d - contains bytes-allocated-count
