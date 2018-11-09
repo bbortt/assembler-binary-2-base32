@@ -97,7 +97,7 @@ There is no explanation on decoding from Base32 as this is literally the exact s
 
 ## Copyright, license and usage for BFH TI
 
-This project is licensed under the terms of [MTI License](https://github.com/bbortt/assembly-binary-2-base32/blob/master/LICENSE).
+This project is licensed under the terms of [MIT License](https://github.com/bbortt/assembly-binary-2-base32/blob/master/LICENSE).
 
 This means you have the permission to use the code for commercial as well as for private use. You may modify and contribute to the code, in addition you may distribute it. But: I do not guarantee warranty nor am I liable in any case.
 
