@@ -67,8 +67,6 @@ readInput:
 
 checkShouldExitProgram:
 
-    cmp r10, 0          ; Shall not exit if already line read
-    jne checkShouldReadAnotherLine ; Check if line contains enter
     cmp rax, 0          ; Compare input size to 0 (equals ctrl+d)
     je exitProgramm     ; Proceed to exit if command received
 
