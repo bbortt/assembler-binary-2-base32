@@ -46,22 +46,43 @@ _start:
 
     nop                 ; Start of program
 
+prepareReadInput:
+
+    xor rax, rax        ; Contains current input size
+    xor r10, r10        ; Contains final input size
+    xor r15, r15        ; Reset interim results
+
 readInput:
 
+    mov r15, inputLength ; Save input size as interim result for calculations
+    sub r15, r10        ; Calculate remaining input size
     mov rax, 0          ; Code for sys-read call
     mov rdi, 0          ; File-Descriptor 1: Standard input
     mov rsi, input      ; Specify input location
-    mov rdx, inputLength ; Specify input size to read
+    add rsi, r10        ; Offset last line and override enter
+    mov rdx, r15        ; Specify remaining input size to read
     syscall             ; Execute read with kernel call
+
+    sub rsi, r10        ; Reset input-pointer to beginning of input
 
 checkShouldExitProgram:
 
-    cmp eax, 0          ; Compare input size to 0 (equals ctrl+d)
+    cmp r10, 0          ; Shall not exit if already line read
+    jne checkShouldReadAnotherLine ; Check if line contains enter
+    cmp rax, 0          ; Compare input size to 0 (equals ctrl+d)
     je exitProgramm     ; Proceed to exit if command received
 
-prepareRegisters:
+checkShouldReadAnotherLine:
 
-    mov r10d, eax       ; Persist input size as eax is used for calculations
+    add rax, r10        ; Input size used for rex instructions
+    mov r10, rax        ; Persist input size because rax will be used for calculations later on
+    cmp byte [rsi+rax-1], 10 ; Compare last character to line break
+    jne prepareRegisters ; Start encoding if no enter detected
+
+    dec r10             ; Override enter on next line
+    jmp readInput       ; Read another input line
+
+prepareRegisters:
 
     ; At this point, the following registers are in use:
     xor eax, eax        ; eax - contains parameters for the modulo calculation
@@ -191,7 +212,7 @@ writeEncodedString:
     mov rdx, r8         ; Specify output size to read/write
     syscall             ; Execute write with kernel kall
 
-    jmp readInput       ; Loop until ctrl+d is pressed
+    jmp prepareReadInput ; Loop until ctrl+d is pressed
 
 exitProgramm:
 
