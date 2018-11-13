@@ -59,6 +59,11 @@ checkShouldExitProgram:
     cmp eax, 0          ; Compare input size to 0 (equals ctrl+d)
     je exitProgramm     ; Proceed to exit if command received
 
+    mov r15d, 8         ; Prepare 8, input size needs to be a multiple of
+    div r15d            ; Input size % 8 to check multiple of
+    cmp dl, 0           ; Compare modulo result to 0
+    je exitInvalidInput ; Exit with error return code if input size is not a multiple of 8
+
 prepareRegisters:
 
     mov r10d, eax       ; Persist input size as eax is used for calculations
