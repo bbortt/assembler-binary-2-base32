@@ -34,9 +34,9 @@ SECTION .data           ; Section containing initialised data
 
 SECTION .bss            ; Section containing uninitialized data
 
-    input: resb 4096
+    input:       resb 4096
     inputLength: equ 4096
-    output:    resb 4096
+    output:      resb 4096
 
 SECTION .text           ; Section containing code
 
