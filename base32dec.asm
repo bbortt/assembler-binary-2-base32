@@ -103,8 +103,8 @@ checkIsCurrentIndex:
 
 addToOutput:
 
-    shr [output], 5       ; Prepare output for next 5 bits, nullify
-    and [output], cl      ;  Match current list-loop-index to output
+    shr [output], 5     ; Prepare output for next 5 bits, nullify
+    and [output], cl    ;  Match current list-loop-index to output
 
     add r8w, 5          ; 5 more bits written to output-buffer
 
@@ -120,7 +120,7 @@ readNextInputByte:
 
 addLineBreak:
 
-    mov eax, r8d         ; Move output-bits-count (amount of processed bits) to eax
+    mov eax, r8d        ; Move output-bits-count (amount of processed bits) to eax
     mov r15b, 8         ; Prepare 8-bit divisor
     div r15b            ; Divide output-size by 8 to get amount of bytes.
     ; ah - contains reminder, al - contains quotien
