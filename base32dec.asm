@@ -138,3 +138,9 @@ exitProgramm:
     mov rax, 60         ; Code for exit
     mov rdi, 0          ; Return code 0
     syscall             ; Execute exit with kernel call
+
+exitInvalidInput:
+
+    mov rax, 60         ; Code for exit
+    mov rdi, 1          ; Return code 0
+    syscall             ; Execute exit with kernel call
