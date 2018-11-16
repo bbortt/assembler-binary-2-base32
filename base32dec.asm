@@ -59,6 +59,8 @@ checkShouldExitProgram:
     cmp eax, 0          ; Compare input size to 0 (equals ctrl+d)
     je exitProgramm     ; Proceed to exit if command received
 
+    mov r10, rax        ; Persist effective input size in r10
+
     mov r15d, 8         ; Prepare 8, input size needs to be a multiple of
     div r15d            ; Input size % 8 to check multiple of
     cmp dl, 0           ; Compare modulo result to 0
@@ -66,21 +68,22 @@ checkShouldExitProgram:
 
 prepareRegisters:
 
-    mov r10d, eax       ; Persist input size as eax is used for calculations
-
     ; At this point, the following registers are in use:
     xor eax, eax        ; eax - contains parameters for the final division calculations
     xor ebx, ebx        ;                                   bl contains next-byte
     xor ecx, ecx        ; ecx required for calculations     cl contains list-loop-index
-    xor r8d, r8d        ; r8d - contains output-bits-count
-    ;                     r10 - contains byte-to-process-count to detect end of encoding
+    xor rdx, rdx	; rdx - contains 40 bytes which will be written to output
+    xor r8d, r8d        ; r8d - contains turns-done-count
+    xor r9d, r9d	; r9d - contains count of bits ready to be outputted
+    ;                     r10 - contains effective input count to detect end of encoding
+    xor r11d, r11d      ; r11d - contains effective output size
     xor r15d, r15d      ; r15d - contains interim results
 
 initializeData:
 
 toBinary:
 
-    mov bl, [input+r10d]  ; Read last input unprocessed byte as next-byte
+    mov bl, [input+r8d]  ; Read last input unprocessed byte as next-byte
 
 checkEqualsSuffix:
 
@@ -96,44 +99,47 @@ checkIsCurrentIndex:
     xor r15d, r15d      ; Clear previous interim results
     mov r15d, ecx       ; Save list-loop-index to 32-bit register
     cmp bl, [BASE32_TABLE+r15d] ; Compare current char to list index
-    je addToOutput      ; Write current list-loop-index to output if this is the current character
+    je writeToRegisterOutput ; Write current list-loop-index to output if this is the current character
 
     inc ecx             ; Proceed to next character if the current didnt match
     jmp checkIsCurrentIndex ; Jump to the start of the loop
 
-addToOutput:
+writeToRegisterOutput:
 
-    shr [output], 5     ; Prepare output for next 5 bits, nullify
-    and [output], cl    ;  Match current list-loop-index to output
+    ;; TODO
 
-    add r8w, 5          ; 5 more bits written to output-buffer
+    add r9d, 5          ; Next 5 bits ready to be outputted
+
+checkIsMultipleOf8ForOutput:
+
+    cmp r9d, 40         ; We can write to output only if multiple of 8
+    jne checkIfInputLeftToProcess ; Do not write to output, check next input
+
+writeRegisterOutputToPointer:
+
+    ;;  TODO
+
+    add r11d, 40        ; Increse effective output size
 
 checkIfInputLeftToProcess:
 
-    cmp r10d, 0         ; Check if there is an unprocessed input-byte left
+    inc r8d             ; Increase turn-done-count
+
+    cmp r8d, r10d       ; Check if there is an unprocessed input-byte left
     je addLineBreak     ; Finalize output if nothing left to process
 
-readNextInputByte:
-
-    dec r10d            ; Decrease byte-to-process-count, read next byte from input
     jmp toBinary        ; Start decoding with next character
 
 addLineBreak:
 
-    mov eax, r8d        ; Move output-bits-count (amount of processed bits) to eax
-    mov r15b, 8         ; Prepare 8-bit divisor
-    div r15b            ; Divide output-size by 8 to get amount of bytes.
-    ; ah - contains reminder, al - contains quotien
-
-    inc al              ; Increase al by one, this is the line-break location
-    mov [output+eax], byte 10 ; Add line-break to the end of output
+    ;; TODO
 
 writeEncodedString:
 
     mov rax, 1          ; Code for sys-write call
     mov rdi, 1          ; File-Descriptor 1: Standard outp
     mov rsi, output     ; Specify output location
-    mov rdx, r8         ; Specify output size to read/write
+    mov rdx, r11         ; Specify output size to read/write
     syscall             ; Execute write with kernel kall
 
     jmp readInput       ; Loop until ctrl+d is pressed
