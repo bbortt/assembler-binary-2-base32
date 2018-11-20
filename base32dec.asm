@@ -76,7 +76,6 @@ prepareRegisters:
     xor r8d, r8d        ; r8d - contains turns-done-count
     xor r9d, r9d	; r9d - contains count of bits ready to be outputted
     ;                     r10 - contains effective input count to detect end of encoding
-    xor r11d, r11d      ; r11d - contains effective output size
     xor r15d, r15d      ; r15d - contains interim results
 
 initializeData:
@@ -106,7 +105,8 @@ checkIsCurrentIndex:
 
 writeToRegisterOutput:
 
-    ;; TODO
+    shl dl, 5           ; Shift already processed 5 bits to left
+    and dl, bl          ; Add the next 5 bits to the end of current output
 
     add r9d, 5          ; Next 5 bits ready to be outputted
 
@@ -115,11 +115,12 @@ checkIsMultipleOf8ForOutput:
     cmp r9d, 40         ; We can write to output only if multiple of 8
     jne checkIfInputLeftToProcess ; Do not write to output, check next input
 
-writeRegisterOutputToPointer:
+writeRegisterOutput:
 
-    ;;  TODO
-
-    add r11d, 40        ; Increse effective output size
+    mov rax, 1          ; Code for sys-write call
+    mov rdi, 1          ; File-Descriptor 1: Standard output
+    mov rsi, [rdx+24]   ; Edx contains our output (40 bits) right alligned
+    mov rdx, 40         ; Output size will always be 40
 
 checkIfInputLeftToProcess:
 
@@ -132,17 +133,11 @@ checkIfInputLeftToProcess:
 
 addLineBreak:
 
-    ;; TODO
-
-writeEncodedString:
-
     mov rax, 1          ; Code for sys-write call
-    mov rdi, 1          ; File-Descriptor 1: Standard outp
-    mov rsi, output     ; Specify output location
-    mov rdx, r11         ; Specify output size to read/write
-    syscall             ; Execute write with kernel kall
-
-    jmp readInput       ; Loop until ctrl+d is pressed
+    mov rdi, 1          ; File-Descriptor 1: Standard output
+    mov rsi, 10         ; 10 equals new line character
+    mov rdx, 1          ; Output size to write
+    syscall
 
 exitProgramm:
 
