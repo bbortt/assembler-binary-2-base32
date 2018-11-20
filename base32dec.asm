@@ -119,8 +119,8 @@ writeRegisterOutput:
 
     mov rax, 1          ; Code for sys-write call
     mov rdi, 1          ; File-Descriptor 1: Standard output
-    mov rsi, [rdx+24]   ; Edx contains our output (40 bits) right alligned
-    mov rdx, 40         ; Output size will always be 40
+    mov rsi, [rdx+3]    ; Rdx contains our output (40 bits / 5 byte) right alligned
+    mov rdx, 5          ; Output size will always be 5
 
 checkIfInputLeftToProcess:
 
@@ -140,6 +140,20 @@ addLineBreak:
     syscall
 
 exitProgramm:
+writeRemainingOutput:
+
+    xor r15, r15        ; Clear interim results from previous calculations
+	
+    mov eax, r9d        ; Move output-bit-count to rax for calculations
+    mov r15b, 8         ; Move divider to interim results
+    div r15b            ; Divide output-bit-count by 8
+    mov r15b, al        ; Save quotient to interim results
+
+    mov rax, 1          ; Code for sys-write call
+    mov rdi, 1          ; File-Descriptor 1: Standard output
+    add [rdx], r15b     ; Move pointer to start of remaining output
+    mov rsi, [rdx+3]    ; Rdx contains our output (40 bits) right alligned
+    mov rdx, r15        ; Size of remaining output
 
     mov rax, 60         ; Code for exit
     mov rdi, 0          ; Return code 0
