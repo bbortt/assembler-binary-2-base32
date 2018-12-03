@@ -57,7 +57,7 @@ readInput:
     mov r15, inputLength ; Save input size as interim result for calculations
     sub r15, r10        ; Calculate remaining input size
     mov rax, 0          ; Code for sys-read call
-    mov rdi, 0          ; File-Descriptor 1: Standard input
+    mov rdi, 0          ; File-Descriptor 0: Standard input
     mov rsi, input      ; Specify input location
     add rsi, r10        ; Offset last line and override enter
     mov rdx, r15        ; Specify remaining input size to read
@@ -205,7 +205,7 @@ addLineBreak:
 writeEncodedString:
 
     mov rax, 1          ; Code for sys-write call
-    mov rdi, 1          ; File-Descriptor 1: Standard outp
+    mov rdi, 1          ; File-Descriptor 1: Standard output
     mov rsi, output     ; Specify output location
     mov rdx, r8         ; Specify output size to read/write
     syscall             ; Execute write with kernel kall

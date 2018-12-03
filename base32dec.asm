@@ -29,19 +29,23 @@
 ;  SOFTWARE.
 
 
-SECION .data
-    file db '/usr/bin/base32',0
-    file_arg db 'base33',0
-    decode_arg db '--decode',0
-    argv dq file_arg, decode_arg, 0
+SECTION .data           ; Section containing initialised data
 
-SECTION .text
+    BASE32: db '/usr/bin/base32',0
+    BASE32_ARG: db 'base33',0
+    DECODE_ARG: db '--decode',0
+    ARGV: dq BASE32_ARG, DECODE_ARG, 0
 
-global     _start
+SECTION .text           ; Section containing code
+
+global     _start       ; Linker needs this to find the entry point!
 
 _start:
-    mov     rax, 59
-    mov     rdi, file
-    mov     rsi, argv
-    mov     rdx, 0
-    syscall
+
+    nop                 ; Start of program
+
+    mov     rax, 59     ; Code for sys-execenv call
+    mov     rdi, BASE32 ; File pointer for /usr/bin/base32
+    mov     rsi, ARGV   ; Arguments: argv[0]="base32", arg[1]="--decode"
+    mov     rdx, 0      ; File-Descriptor 0: Standard input
+    syscall             ; Execute program with kernel call
