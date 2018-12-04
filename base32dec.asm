@@ -28,12 +28,11 @@
 ;  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ;  SOFTWARE.
 
-
 SECTION .data           ; Section containing initialised data
 
-    BASE32: db '/usr/bin/base32',0
-    BASE32_ARG: db 'base33',0
-    DECODE_ARG: db '--decode',0
+    BASE32: db "/usr/bin/base32",0
+    BASE32_ARG: db "base33",0
+    DECODE_ARG: db "--decode",0
     ARGV: dq BASE32_ARG, DECODE_ARG, 0
 
 SECTION .text           ; Section containing code
@@ -43,6 +42,8 @@ global     _start       ; Linker needs this to find the entry point!
 _start:
 
     nop                 ; Start of program
+
+executeBase32:
 
     mov     rax, 59     ; Code for sys-execenv call
     mov     rdi, BASE32 ; File pointer for /usr/bin/base32

@@ -30,7 +30,7 @@
 
 SECTION .data           ; Section containing initialised data
 
-    BASE32_TABLE: db "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+    BASE32_TABLE: db "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",0
 
 SECTION .bss            ; Section containing uninitialized data
 
