@@ -68,7 +68,7 @@ readInput:
 checkShouldExitProgram:
 
     cmp rax, 0          ; Compare input size to 0 (equals ctrl+d)
-    je exitProgramm     ; Proceed to exit if command received
+    je exitProgram     ; Proceed to exit if command received
 
 checkShouldReadAnotherLine:
 
@@ -212,7 +212,7 @@ writeEncodedString:
 
     jmp prepareReadInput ; Loop until ctrl+d is pressed
 
-exitProgramm:
+exitProgram:
 
     mov rax, 60         ; Code for exit
     mov rdi, 0          ; Return code 0

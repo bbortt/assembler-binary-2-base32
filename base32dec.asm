@@ -50,3 +50,9 @@ executeBase32:
     mov     rsi, ARGV   ; Arguments: argv[0]="base32", arg[1]="--decode"
     mov     rdx, 0      ; File-Descriptor 0: Standard input
     syscall             ; Execute program with kernel call
+
+exitProgram:
+
+    mov rax, 60         ; Code for exit
+    mov rdi, 0          ; Return code 0
+    syscall             ; Execute exit with kernel call
