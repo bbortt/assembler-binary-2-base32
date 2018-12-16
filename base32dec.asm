@@ -31,7 +31,7 @@
 SECTION .data           ; Section containing initialised data
 
     BASE32: db "/usr/bin/base32",0
-    BASE32_ARG: db "base33",0
+    BASE32_ARG: db "base32",0
     DECODE_ARG: db "--decode",0
     ARGV: dq BASE32_ARG, DECODE_ARG, 0
 
