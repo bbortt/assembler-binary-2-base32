@@ -73,7 +73,7 @@ b = turns-done (2) * 5 = 10
 // Calculate how meany bits of the current input-byte are still processable
 a (16) % b (10) = 6
 ```
-If the result is exactly or greater than 5 we can still read a Base32 encoded value from the current input-byte. Otherwise we need to read another byte from input into our transactional state.
+If the result is exactly or greater than 5, there exists another Base32 encoded value in the current input-byte. Otherwise there are not enough transactional bits left and you must read another byte from the input.
 
 This process is (simplified) repeated until all bytes were converted to 5 bit blocks.
 
@@ -86,6 +86,10 @@ The ending is really easy. Just add as much '='s to your output until the byte-c
 Based on all this I wrote another pseudo code onto a paper. This time a bit more readable (at least I tried):
 
 ![More readable algorithm](https://github.com/bbortt/assembly-binary-2-base32/blob/master/notes/more_readable_algorithm.jpg)
+
+### Sidenote
+
+Of course this is not THE solution. It just IS a solution.
 
 ## Explaining the final code
 
